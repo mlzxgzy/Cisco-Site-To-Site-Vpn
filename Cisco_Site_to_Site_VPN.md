@@ -1,5 +1,5 @@
 # GNS3 - 关于基于IPsec的Site To Site VPN 的搭建
-![拓扑图](./images/1600840775746.png)
+![拓扑图](./1.png)
 
 **前提：全网通，PC-1可以Ping通PC-2**
 
