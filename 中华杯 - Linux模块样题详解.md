@@ -126,3 +126,92 @@ root@debian:~#
 	root@linux:/etc/bind# update-rc.d bind9 enable
 	root@linux:/etc/bind#
 	```
+
+## Apache2
+1. 安装 Apache2 服务
+	```bash?linenums
+	root@linux:~# # 安装Apache2及网页测试工具
+	root@linux:~# apt install -y apache2 curl
+		...
+		Done
+	root@linux:~# 
+	```
+2. 设置 apache2 提供 PHP 脚本的解析服务
+	```bash?linenums
+	root@linux:~# # 安装Apache2的PHP模块
+	root@linux:~# apt install -y libapache2-mod-php
+		...
+		Done
+	root@linux:~# 
+	```
+3. 在 apache2 的默认网站文件目录中创建一个test.php页面用于测试php模块是否正确安装(内容为phpinfo)
+	```bash?linenums
+	root@linux:~# # 转到默认网页存放处
+	root@linux:~# cd /var/www/html/
+	root@linux:/var/www/html# # 创建并编辑test.php文件
+	root@linux:/var/www/html# vim test.php
+		<?php phpinfo();?>
+	root@linux:/var/www/html# # 使用curl测试php
+	root@linux:/var/www/html# curl localhost/test.php
+		......
+		一堆
+		......
+	root@linux:/var/www/html# # 测试成功
+	```
+4. 添加两个虚拟站点，当使用 w1.skills2021.sh、w2.skills2021.sh 访问时分别显示为“This is w1 website”和“This is w2 website”
+	```bash?linenums
+	root@linux:/var/www/html# # 转到配置文件文件夹
+	root@linux:/var/www/html# cd /etc/apache2/sites-available/
+	root@linux:/etc/apache2/sites-available# # 从模板(000-default.conf)创建出新配置
+	root@linux:/etc/apache2/sites-available# cp 000-default.conf w1.conf
+	root@linux:/etc/apache2/sites-available# cp 000-default.conf w2.conf
+	root@linux:/etc/apache2/sites-available# # 修改w1站点
+	root@linux:/etc/apache2/sites-available# vim w1.conf
+		# 将虚拟主机名改成要求的
+		<VirtualHost w1.skills2021.sh:80>
+		...
+			# 将网站跟目录改成别的地方
+			DocumentRoot /var/www/w1
+		...
+		# 别的就没啥好改的了
+	root@linux:/etc/apache2/sites-available# # 修改w2站点
+	root@linux:/etc/apache2/sites-available# vim w2.conf
+		# 将虚拟主机名改成要求的
+		<VirtualHost w2.skills2021.sh:80>
+		...
+			# 将网站跟目录改成别的地方
+			DocumentRoot /var/www/w2
+		...
+		# 别的就没啥好改的了
+	root@linux:/etc/apache2/sites-available# # 转到网站存放处
+	root@linux:/etc/apache2/sites-available# cd /var/www/
+	root@linux:/var/www# # 创建对应文件夹
+	root@linux:/var/www# mkdir w1 w2
+	root@linux:/var/www# # 创建w1的index文件并写入内容
+	root@linux:/var/www# echo "This is w1 website" > w1/index.html
+	root@linux:/var/www# # 创建w2的index文件并写入内容
+	root@linux:/var/www# echo "This is w2 website" > index.html
+	root@linux:/var/www# # 修改DNS,这个只是临时修改，可能重启或某段时间后会自动恢复
+	root@linux:/var/www# # 每当访问不了都可以重新设置下nameserver
+	root@linux:/var/www# # 永久修改比较耗时间，懒得做了，毕竟比赛环境，如果不放心可以写个死循环
+	root@linux:/var/www# echo "nameserver 192.168.101.100" > /etc/resolv.conf
+	root@linux:/var/www# # 启动w1和w2站点
+	root@linux:/var/www# a2ensite w1 w2
+		Enabling site w1.
+		Enabling site w2.
+		To activate the new configuration, you need to run:
+		  systemctl reload apache2
+	root@linux:/var/www# # 重新加载Apache2服务
+	root@linux:/var/www# systemctl restart apache2
+	root@linux:/var/www# # 测试w1的访问与内容
+	root@linux:/var/www# curl w1.skills2021.sh
+		This is w1 website
+	root@linux:/var/www# # 测试w2的访问与内容
+	root@linux:/var/www# curl w2.skills2021.sh
+		This is w2 website
+	```
+5. 将 apache2 服务设置为开机自启动
+	```bash?linenums
+	root@linux:/var/www# update-rc.d apache2 enable
+	root@linux:/var/www#
+	```
